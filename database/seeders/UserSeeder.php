@@ -12,9 +12,9 @@ class UserSeeder extends Seeder
     {
         DB::table('tb_user')->insert([
             [
-                'name' => 'Admin',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('password123'),
+                'name' => 'Admin Yogie',
+                'email' => 'adminyogie@example.com',
+                'password' => Hash::make('password'),
                 'role' => 'admin',
                 'created_at' => now(),
                 'updated_at' => now()

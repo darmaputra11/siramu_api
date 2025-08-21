@@ -16,14 +16,14 @@ Route::get('/test', function () {
 // ✅ Public endpoints
 Route::post('/register', function (Request $request) {
     $validated = $request->validate([
-        'username' => 'required',
+        'name' => 'required',
         'email' => 'required|email|unique:users',
         'password' => 'required|min:6',
-        'role' => 'required|in:admin,bjps,diskes,dinsos',
+        'role' => 'required|in:admin,viewer',
     ]);
 
     $user = User::create([
-        'username' => $validated['username'],
+        'name' => $validated['name'],
         'email' => $validated['email'],
         'password' => bcrypt($validated['password']),
         'role' => $validated['role'],
@@ -64,6 +64,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Only Admin
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class)->except(['index', 'show']);
+        Route::post('/users', [UserController::class, 'store']); // create user
+        Route::delete('/users/{id}', [UserController::class, 'destroy']);
         Route::post('kematian', [KematianController::class, 'store']);
         Route::post('pindah', [PindahController::class, 'store']);
         Route::put('kematian/{id}', [KematianController::class, 'update']);
@@ -73,7 +75,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // Admin + bjps + diskes + dinsos → Boleh lihat data
-    Route::middleware('role:admin,bjps,diskes,dinsos')->group(function () {
+    Route::middleware('role:admin,viewer')->group(function () {
+        Route::get('users', [UserController::class, 'index']);   // ✅ Tambahkan ini
+        Route::get('users/{id}', [UserController::class, 'show']); // ✅ Opsional
+
         Route::get('kematian', [KematianController::class, 'index']);
         Route::get('pindah', [PindahController::class, 'index']);
         Route::get('kematian/{id}', [KematianController::class, 'show']);
