@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;   // <— penting
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
+    // isi sesuai kolom yang ada
     protected $fillable = [
         'name',
         'email',
@@ -23,7 +24,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    // ===== JWTSubject methods =====
+    public function getJWTIdentifier()
+    {
+        // biasanya primary key user
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims(): array
+    {
+        // bisa tambahkan klaim custom; kosongkan jika tidak perlu
+        return [];
+    }
 }
