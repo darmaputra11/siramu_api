@@ -7,10 +7,28 @@ use Illuminate\Http\Request;
 
 class KematianController extends Controller
 {
-    public function index()
-    {
-        return response()->json(Kematian::all());
-    }
+    public function index(Request $request)
+{
+    $q       = (string) $request->query('q', '');
+    $perPage = (int) $request->query('per_page', 10);
+    $start   = $request->query('start_date');
+    $end     = $request->query('end_date');
+    $sort    = $request->query('sort', 'oldest'); // oldest|newest
+
+    $rows = \App\Models\Kematian::query()
+        ->when($q !== '', fn($qb) =>
+            $qb->where('nama_lengkap','like',"%$q%")
+               ->orWhere('nik','like',"%$q%")
+               ->orWhere('nomor_akta','like',"%$q%")
+        )
+        ->when($start, fn($qb) => $qb->whereDate('tanggal_kematian','>=',$start))
+        ->when($end,   fn($qb) => $qb->whereDate('tanggal_kematian','<=',$end))
+        ->orderBy('tanggal_kematian', $sort === 'newest' ? 'desc' : 'asc')
+        ->paginate($perPage);
+
+    return response()->json($rows);
+}
+
 
     public function store(Request $request)
     {

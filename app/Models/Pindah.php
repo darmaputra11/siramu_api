@@ -10,12 +10,7 @@ class Pindah extends Model
     use HasFactory;
 
     protected $table = 'tb_pindah';
-
-    protected $fillable = [
-        'nik',
-        'nama_lengkap',
-        'no_kk',
-        'nomor_pindah',
-        'tanggal_pindah',
-    ];
+protected $fillable = [
+  'nik','nama_lengkap','nomor_kk','nomor_pindah','tanggal_pindah'
+];
 }
