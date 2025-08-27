@@ -35,9 +35,9 @@ class PindahController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nik'            => 'required|string|size:16',
+            'nik'            => 'required|string|max:16',
             'nama_lengkap'   => 'required|string|max:255',
-            'nomor_kk'       => 'required|string|size:16', // ✅ perbaikan nama kolom
+            'nomor_kk'       => 'required|string|max:16', // ✅ perbaikan nama kolom
             'nomor_pindah'   => 'required|string|max:50',
             'tanggal_pindah' => 'required|date',
         ]);
@@ -61,9 +61,9 @@ class PindahController extends Controller
         if (!$data) return response()->json(['message' => 'Data not found'], 404);
 
         $validated = $request->validate([
-            'nik'            => 'sometimes|string|size:16',
+            'nik'            => 'sometimes|string|max:20',
             'nama_lengkap'   => 'sometimes|string|max:255',
-            'nomor_kk'       => 'sometimes|string|size:16', // ✅ konsisten
+            'nomor_kk'       => 'sometimes|string|max:20', // ✅ konsisten
             'nomor_pindah'   => 'sometimes|string|max:50',
             'tanggal_pindah' => 'sometimes|date',
         ]);
