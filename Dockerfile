@@ -1,25 +1,26 @@
 FROM thecodingmachine/php:8.2-v4-apache
 
-# Laravel docroot
+# Laravel serve dari /public
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 WORKDIR /var/www/html
 COPY . .
 
-# Siapkan folder & izin untuk Laravel (pakai www-data)
+# Jalankan langkah yang butuh izin sebagai root
+USER root
 RUN set -eux; \
+    # install composer secara global
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
+    # siapkan folder yang diperlukan Laravel
     mkdir -p storage/logs bootstrap/cache; \
-    chown -R www-data:www-data storage bootstrap/cache; \
+    # install dependency tanpa menjalankan composer scripts (hindari artisan saat build)
+    composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
+    # berikan kepemilikan ke www-data agar runtime Apache bisa tulis
+    chown -R www-data:www-data storage bootstrap/cache vendor; \
     chmod -R 775 storage bootstrap/cache
 
-# Composer install TANPA scripts (hindari artisan jalan saat build)
-RUN set -eux; \
-    curl -sS https://getcomposer.org/installer | php; \
-    php composer.phar install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
-    rm composer.phar
-
-# (opsional, biasanya sudah aktif di image ini)
-# RUN a2enmod rewrite
+# (opsional) kembali ke user default image — tidak wajib
+# USER www-data
 
 EXPOSE 8080
 ENV APACHE_PORT=8080
