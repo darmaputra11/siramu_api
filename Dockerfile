@@ -1,12 +1,12 @@
-FROM thecodingmachine/php:8.3-v4-apache
+FROM thecodingmachine/php:8.2-v4-apache
 
-# Cukup set document root; thecodingmachine image akan handle sendiri
+# Cukup set docroot; image ini sudah siap untuk Laravel
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 WORKDIR /var/www/html
 COPY . .
 
-# Composer install (tanpa dev) — non-root friendly
+# Composer install (tanpa dev) — tidak butuh root
 RUN set -eux; \
     curl -sS https://getcomposer.org/installer | php; \
     php composer.phar install --no-dev --optimize-autoloader --no-interaction; \
@@ -14,7 +14,6 @@ RUN set -eux; \
     php artisan config:clear || true; \
     php artisan route:clear || true; \
     php artisan view:clear || true
-
 
 # Permission Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache && \
