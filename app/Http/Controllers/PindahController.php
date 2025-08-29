@@ -9,27 +9,42 @@ class PindahController extends Controller
 {
     // GET /api/pindah
     public function index(Request $request)
-    {
-        $q       = (string) $request->query('q', '');
-        $perPage = (int) $request->query('per_page', 10);
-        $start   = $request->query('start_date'); // yyyy-mm-dd
-        $end     = $request->query('end_date');   // yyyy-mm-dd
-        $sort    = $request->query('sort', 'oldest'); // oldest|newest
+{
+    $request->validate([
+        'q' => ['nullable','string'],
+        'start_date' => ['nullable','date_format:Y-m-d'],
+        'end_date' => ['nullable','date_format:Y-m-d'],
+        'sort' => ['nullable','in:newest,oldest'],
+        'per_page' => ['nullable','integer','min:1','max:200'],
+    ]);
 
-        $rows = Pindah::query()
-            ->when($q !== '', function ($qb) use ($q) {
-                $qb->where('nama_lengkap', 'like', "%$q%")
-                   ->orWhere('nik', 'like', "%$q%")
-                   ->orWhere('nomor_kk', 'like', "%$q%")
-                   ->orWhere('nomor_pindah', 'like', "%$q%");
-            })
-            ->when($start, fn($qb) => $qb->whereDate('tanggal_pindah', '>=', $start))
-            ->when($end,   fn($qb) => $qb->whereDate('tanggal_pindah', '<=', $end))
-            ->orderBy('tanggal_pindah', $sort === 'newest' ? 'desc' : 'asc')
-            ->paginate($perPage);
+    $q   = (string) $request->query('q', '');
+    $dir = $request->query('sort', 'newest') === 'oldest' ? 'asc' : 'desc';
+    $pp  = (int) $request->query('per_page', 10);
 
-        return response()->json($rows);
+    $query = \App\Models\Pindah::query();
+
+    if ($q !== '') {
+        $query->where(function ($w) use ($q) {
+            $w->where('nik','like',"%{$q}%")
+              ->orWhere('nama_lengkap','like',"%{$q}%")
+              ->orWhere('nomor_kk','like',"%{$q}%")
+              ->orWhere('nomor_pindah','like',"%{$q}%");
+        });
     }
+
+    // filter tanggal sesuai entitas (pindah/kematian)
+    if ($request->start_date) $query->whereDate('tanggal_pindah','>=',$request->start_date);
+    if ($request->end_date)   $query->whereDate('tanggal_pindah','<=',$request->end_date);
+
+    // ⬇️ urut stabil: non-NULL dulu, lalu created_at, lalu id
+    $query->reorder()
+          ->orderByRaw('CASE WHEN created_at IS NULL THEN 1 ELSE 0 END ASC')
+          ->orderBy('created_at', $dir)
+          ->orderBy('id', $dir);
+
+    return $query->paginate($pp)->appends($request->query());
+}
 
     // POST /api/pindah
     public function store(Request $request)

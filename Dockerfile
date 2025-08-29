@@ -1,25 +1,30 @@
-# Gunakan image PHP 8.2 dengan Apache (lebih gampang)
-FROM php:8.2-apache
+FROM thecodingmachine/php:8.3-v4-apache
 
-# Install ekstensi PHP yang dibutuhkan Laravel
-RUN docker-php-ext-install pdo pdo_mysql
+# Install dependensi tambahan
+RUN apt-get update && apt-get install -y \
+    libzip-dev zip unzip git \
+ && docker-php-ext-install pdo_mysql zip \
+ && rm -rf /var/lib/apt/lists/*
 
-# Aktifkan mod_rewrite Apache (buat Laravel routing)
-RUN a2enmod rewrite
+# Set document root ke /public (Laravel)
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf && \
+    sed -ri -e 's!/var/www/!/var/www/html/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Copy semua file Laravel ke container
-COPY . /var/www/html
+WORKDIR /var/www/html
+COPY . .
 
-# Set permission untuk storage & bootstrap/cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Install composer dependencies (tanpa dev)
+RUN set -eux; \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
+    composer install --no-dev --optimize-autoloader --no-interaction; \
+    php artisan config:clear || true; \
+    php artisan route:clear || true; \
+    php artisan view:clear || true
 
-# Atur Apache agar Laravel bisa handle semua request
-RUN echo "<Directory /var/www/html/public>\n\
-    AllowOverride All\n\
-</Directory>" >> /etc/apache2/apache2.conf
+# Permission untuk Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
-# Jalankan Apache di port 80
-EXPOSE 80
-
-# Command default
-CMD ["apache2-foreground"]
+EXPOSE 8080
+ENV APACHE_PORT=8080

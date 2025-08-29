@@ -23,7 +23,7 @@ class KematianController extends Controller
         )
         ->when($start, fn($qb) => $qb->whereDate('tanggal_kematian','>=',$start))
         ->when($end,   fn($qb) => $qb->whereDate('tanggal_kematian','<=',$end))
-        ->orderBy('tanggal_kematian', $sort === 'newest' ? 'desc' : 'asc')
+        ->orderBy('created_at', $sort === 'newest' ? 'desc' : 'asc')
         ->paginate($perPage);
 
     return response()->json($rows);
