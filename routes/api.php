@@ -30,6 +30,8 @@ Route::middleware('auth:api')->group(function () {
 
     // Admin-only: create/update/delete
     Route::middleware('role:admin')->group(function () {
+        Route::put('users/{id}/password', [UserController::class, 'adminResetPassword'])
+             ->name('users.password.reset');
         Route::apiResource('users', UserController::class)->except(['index','show']);
 
         Route::post('kematian', [KematianController::class, 'store']);

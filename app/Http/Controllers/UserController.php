@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB; 
 
 class UserController extends Controller
 {
@@ -121,4 +122,30 @@ class UserController extends Controller
 
         return response()->noContent(); // 204
     }
+
+    public function adminResetPassword(Request $request, $id)
+{
+    $actor = $request->user();
+    if (!$actor || $actor->role !== 'admin') {
+        return response()->json(['message' => 'Hanya admin yang dapat mengubah password.'], 403);
+    }
+
+    $request->validate([
+        'password' => ['required', 'string', 'min:6'], // tanpa confirmed
+    ]);
+
+    $user = User::findOrFail($id);
+
+    $user->update([
+        'password' => Hash::make($request->password),
+    ]);
+
+    // Opsional (disarankan): revoke semua refresh token user tsb
+    DB::table('refresh_tokens')
+        ->where('user_id', $user->id)
+        ->update(['revoked' => true, 'updated_at' => now()]);
+
+    return response()->json(['message' => 'Password berhasil direset.']);
+}
+
 }

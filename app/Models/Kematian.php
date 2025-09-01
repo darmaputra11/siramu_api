@@ -16,5 +16,6 @@ class Kematian extends Model
         'nama_lengkap',
         'tanggal_kematian',
         'nomor_akta',
+        'tanggal_akta',
     ];
 }
