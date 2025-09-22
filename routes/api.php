@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KematianController;
 use App\Http\Controllers\PindahController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BayiController;
 
 Route::get('/test', fn () => response()->json(['message' => 'API is working!']));
 
@@ -26,6 +27,10 @@ Route::middleware('auth:api')->group(function () {
 
         Route::get('pindah', [PindahController::class, 'index']);
         Route::get('pindah/{id}', [PindahController::class, 'show']);
+
+        // ✅ bayi read-only untuk admin + viewer
+        Route::get('bayi', [BayiController::class, 'index']);
+        Route::get('bayi/{id}', [BayiController::class, 'show']);
     });
 
     // Admin-only: create/update/delete
@@ -41,5 +46,10 @@ Route::middleware('auth:api')->group(function () {
         Route::post('pindah', [PindahController::class, 'store']);
         Route::put('pindah/{id}', [PindahController::class, 'update']);
         Route::delete('pindah/{id}', [PindahController::class, 'destroy']);
+
+        // ✅ bayi admin-only crud
+        Route::post('bayi', [BayiController::class, 'store']);
+        Route::put('bayi/{id}', [BayiController::class, 'update']);
+        Route::delete('bayi/{id}', [BayiController::class, 'destroy']);
     });
 });
